@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — GolfGives{% endblock %}
+{% block content %}
+<div class="container py-4">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <h2 style="font-weight:800;margin:0;" id="welcomeMsg">Welcome back 👋</h2>
+      <p style="color:var(--muted);margin:0;" id="subStatus">Loading subscription...</p>
+    </div>
+    <div id="adminLink"></div>
+  </div>
+
+  <!-- Stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="value" id="statScores">—</div>
+        <div class="label">Scores Entered</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="value" id="statDraws">—</div>
+        <div class="label">Draws Entered</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="value" id="statWins">—</div>
+        <div class="label">Total Wins</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="value" id="statEarned">£—</div>
+        <div class="label">Total Earned</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs" id="dashTabs">
+    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tabScores">🏌️ Scores</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabDraws">🎯 Draws</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabWinnings">🏆 Winnings</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabProfile">👤 Profile</a></li>
+  </ul>
+
+  <div class="tab-content mt-3">
+
+    <!-- SCORES TAB -->
+    <div class="tab-pane fade show active" id="tabScores">
+      <div class="row g-4">
+        <div class="col-md-5">
+          <div class="card">
+            <h5 style="font-weight:700;margin-bottom:1.2rem;">Add New Score</h5>
+            <div id="scoreAlert"></div>
+            <form id="scoreForm">
+              <div class="mb-3">
+                <label class="form-label">Stableford Score (1–45)</label>
+                <input type="number" class="form-control" id="scoreInput" min="1" max="45" placeholder="e.g. 32" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Date Played</label>
+                <input type="date" class="form-control" id="scoreDate" required>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Add Score</button>
+            </form>
+          </div>
+        </div>
+        <div class="col-md-7">
+          <div class="card">
+            <h5 style="font-weight:700;margin-bottom:1rem;">Your Last 5 Scores</h5>
+            <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">These are your draw numbers for the next monthly draw.</p>
+            <div id="scoresList"><div style="color:var(--muted);">No scores yet. Add your first score!</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DRAWS TAB -->
+    <div class="tab-pane fade" id="tabDraws">
+      <div class="card">
+        <h5 style="font-weight:700;margin-bottom:1rem;">Monthly Draws</h5>
+        <div id="drawsList"><div style="color:var(--muted);">Loading draws...</div></div>
+      </div>
+    </div>
+
+    <!-- WINNINGS TAB -->
+    <div class="tab-pane fade" id="tabWinnings">
+      <div class="card">
+        <h5 style="font-weight:700;margin-bottom:1rem;">Your Winnings</h5>
+        <div id="winningsList"><div style="color:var(--muted);">No winnings yet. Keep playing!</div></div>
+      </div>
+      <!-- Proof Upload Modal -->
+      <div class="modal fade" id="proofModal" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Upload Proof of Scores</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <p style="color:var(--muted);font-size:0.9rem;">Provide a URL to a screenshot of your scores from the golf platform.</p>
+              <input type="text" class="form-control" id="proofUrl" placeholder="https://...">
+              <input type="hidden" id="proofWinnerId">
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-primary" onclick="submitProof()">Submit Proof</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div class="tab-pane fade" id="tabProfile">
+      <div class="row g-4">
+        <div class="col-md-6">
+          <div class="card">
+            <h5 style="font-weight:700;margin-bottom:1rem;">Subscription Details</h5>
+            <div id="profileInfo"><div style="color:var(--muted);">Loading...</div></div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card">
+            <h5 style="font-weight:700;margin-bottom:1rem;">Your Charity</h5>
+            <div id="charityInfo"><div style="color:var(--muted);">Loading...</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const token = localStorage.getItem('token');
+if (!token) window.location.href = '/login';
+
+const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+
+async function loadDashboard() {
+  try {
+    const [userRes, scoresRes, winnersRes, drawsRes] = await Promise.all([
+      fetch('/auth/me', { headers }),
+      fetch('/api/scores', { headers }),
+      fetch('/api/winners', { headers }),
+      fetch('/api/draws', { headers })
+    ]);
+    if (!userRes.ok) { localStorage.removeItem('token'); window.location.href = '/login'; return; }
+
+    const user = await userRes.json();
+    const scores = await scoresRes.json();
+    const winners = await winnersRes.json();
+    const draws = await drawsRes.json();
+
+    // Welcome
+    document.getElementById('welcomeMsg').textContent = `Welcome back, ${user.full_name} 👋`;
+    const statusClass = user.subscription_status === 'active' ? 'status-active' : 'status-inactive';
+    document.getElementById('subStatus').innerHTML = `Subscription: <span class="status-badge ${statusClass}">${user.subscription_status}</span> · ${user.subscription_type} plan`;
+
+    // Admin link
+    if (user.email.includes('admin')) {
+      document.getElementById('adminLink').innerHTML = `<a href="/admin" class="btn btn-outline-primary btn-sm">Admin Panel →</a>`;
+    }
+
+    // Stats
+    document.getElementById('statScores').textContent = scores.length;
+    document.getElementById('statDraws').textContent = draws.filter(d => d.status === 'published').length;
+    document.getElementById('statWins').textContent = winners.length;
+    const totalEarned = winners.reduce((s, w) => s + w.prize_amount, 0);
+    document.getElementById('statEarned').textContent = '£' + totalEarned.toFixed(2);
+
+    // Scores
+    renderScores(scores);
+
+    // Draws
+    renderDraws(draws, scores);
+
+    // Winnings
+    renderWinnings(winners);
+
+    // Profile
+    renderProfile(user);
+
+    // Charity
+    if (user.charity_id) {
+      fetch('/api/charities/' + user.charity_id).then(r => r.json()).then(c => {
+        document.getElementById('charityInfo').innerHTML = `
+          <h5 style="color:var(--primary);font-weight:700;">${c.name}</h5>
+          <p style="color:var(--muted);">${c.description}</p>
+          ${c.website ? `<a href="${c.website}" target="_blank" style="color:var(--primary);">Visit Website →</a>` : ''}
+          <div style="margin-top:1rem;background:rgba(0,200,150,0.08);border-radius:10px;padding:1rem;">
+            <div style="color:var(--muted);font-size:0.85rem;">Your contribution</div>
+            <div style="font-size:1.5rem;font-weight:800;color:var(--primary);">${user.contribution_percentage}%</div>
+            <div style="color:var(--muted);font-size:0.8rem;">of your subscription</div>
+          </div>`;
+      });
+    }
+  } catch(e) { console.error(e); }
+}
+
+function renderScores(scores) {
+  const el = document.getElementById('scoresList');
+  if (!scores.length) { el.innerHTML = '<div style="color:var(--muted);">No scores yet.</div>'; return; }
+  el.innerHTML = scores.map(s => `
+    <div class="score-item">
+      <div>
+        <span class="score-badge">${s.score}</span>
+        <span style="color:var(--muted);font-size:0.85rem;margin-left:0.8rem;">${s.date}</span>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="deleteScore(${s.id})">✕</button>
+    </div>`).join('');
+}
+
+function renderDraws(draws, scores) {
+  const el = document.getElementById('drawsList');
+  if (!draws.length) { el.innerHTML = '<div style="color:var(--muted);">No draws yet.</div>'; return; }
+  const userNums = new Set(scores.map(s => s.score));
+  el.innerHTML = `<div class="table-responsive"><table class="table">
+    <thead><tr><th>Date</th><th>Numbers</th><th>Prize Pool</th><th>Status</th><th>Action</th></tr></thead>
+    <tbody>${draws.map(d => {
+      const nums = d.numbers.map(n => {
+        const hit = userNums.has(n);
+        return `<span style="display:inline-block;width:32px;height:32px;border-radius:50%;background:${hit ? 'linear-gradient(135deg,var(--primary),var(--accent))' : 'rgba(255,255,255,0.08)'};text-align:center;line-height:32px;font-size:0.85rem;font-weight:700;margin:2px;">${n}</span>`;
+      }).join('');
+      const statusClass = d.status === 'published' ? 'status-active' : 'status-pending';
+      return `<tr>
+        <td>${d.draw_date}</td>
+        <td>${nums}</td>
+        <td style="color:var(--primary);font-weight:700;">£${(d.prize_pool || 0).toFixed(2)}</td>
+        <td><span class="status-badge ${statusClass}">${d.status}</span></td>
+        <td>${d.status === 'pending' ? `<button class="btn btn-primary btn-sm" onclick="enterDraw(${d.id})">Enter Draw</button>` : '—'}</td>
+      </tr>`;
+    }).join('')}</tbody></table></div>`;
+}
+
+function renderWinnings(winners) {
+  const el = document.getElementById('winningsList');
+  if (!winners.length) { el.innerHTML = '<div style="color:var(--muted);">No winnings yet. Keep playing!</div>'; return; }
+  el.innerHTML = winners.map(w => `
+    <div class="winner-item d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <span class="match-badge match-${w.match_type}">${w.match_type}-Match Win</span>
+        <span style="font-size:1.3rem;font-weight:800;color:var(--primary);margin-left:1rem;">£${w.prize_amount.toFixed(2)}</span>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="status-badge status-${w.status}">${w.status}</span>
+        ${w.status === 'pending' && !w.proof_url ? `<button class="btn btn-warning btn-sm" onclick="openProof(${w.id})">Upload Proof</button>` : ''}
+        ${w.proof_url ? `<span style="color:var(--primary);font-size:0.8rem;">✓ Proof submitted</span>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function renderProfile(user) {
+  const renewal = user.renewal_date ? new Date(user.renewal_date).toLocaleDateString() : 'N/A';
+  document.getElementById('profileInfo').innerHTML = `
+    <div style="display:grid;gap:0.8rem;">
+      <div><span style="color:var(--muted);font-size:0.85rem;">Name</span><div style="font-weight:600;">${user.full_name}</div></div>
+      <div><span style="color:var(--muted);font-size:0.85rem;">Email</span><div style="font-weight:600;">${user.email}</div></div>
+      <div><span style="color:var(--muted);font-size:0.85rem;">Plan</span><div style="font-weight:600;text-transform:capitalize;">${user.subscription_type}</div></div>
+      <div><span style="color:var(--muted);font-size:0.85rem;">Status</span><div><span class="status-badge status-${user.subscription_status}">${user.subscription_status}</span></div></div>
+      <div><span style="color:var(--muted);font-size:0.85rem;">Renewal Date</span><div style="font-weight:600;">${renewal}</div></div>
+    </div>`;
+}
+
+// Score form
+document.getElementById('scoreDate').value = new Date().toISOString().split('T')[0];
+document.getElementById('scoreForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const alert = document.getElementById('scoreAlert');
+  try {
+    const res = await fetch('/api/scores', {
+      method: 'POST', headers,
+      body: JSON.stringify({ score: parseInt(document.getElementById('scoreInput').value), date: document.getElementById('scoreDate').value })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert.innerHTML = `<div class="alert alert-success">Score added!</div>`;
+      document.getElementById('scoreInput').value = '';
+      loadDashboard();
+      setTimeout(() => alert.innerHTML = '', 2000);
+    } else {
+      alert.innerHTML = `<div class="alert alert-danger">${data.detail}</div>`;
+    }
+  } catch { alert.innerHTML = `<div class="alert alert-danger">Error adding score.</div>`; }
+});
+
+async function deleteScore(id) {
+  if (!confirm('Delete this score?')) return;
+  await fetch('/api/scores/' + id, { method: 'DELETE', headers });
+  loadDashboard();
+}
+
+async function enterDraw(id) {
+  const res = await fetch('/api/draws/' + id + '/enter', { method: 'POST', headers });
+  const data = await res.json();
+  alert(res.ok ? '✅ ' + data.message + '\nYour numbers: ' + data.numbers.join(', ') : '❌ ' + data.detail);
+  if (res.ok) loadDashboard();
+}
+
+function openProof(winnerId) {
+  document.getElementById('proofWinnerId').value = winnerId;
+  document.getElementById('proofUrl').value = '';
+  new bootstrap.Modal(document.getElementById('proofModal')).show();
+}
+
+async function submitProof() {
+  const id = document.getElementById('proofWinnerId').value;
+  const url = document.getElementById('proofUrl').value;
+  if (!url) { alert('Please enter a URL'); return; }
+  const res = await fetch(`/api/winners/${id}/proof?proof_url=${encodeURIComponent(url)}`, { method: 'POST', headers });
+  const data = await res.json();
+  alert(res.ok ? '✅ ' + data.message : '❌ ' + data.detail);
+  if (res.ok) { bootstrap.Modal.getInstance(document.getElementById('proofModal')).hide(); loadDashboard(); }
+}
+
+loadDashboard();
+</script>
+{% endblock %}

@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel — GolfGives{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <h2 style="font-weight:800;margin:0;">Admin Panel</h2>
+      <p style="color:var(--muted);margin:0;">GolfGives Management Dashboard</p>
+    </div>
+    <a href="/dashboard" class="btn btn-outline-primary btn-sm">← Back to Dashboard</a>
+  </div>
+
+  <!-- Stats -->
+  <div class="row g-3 mb-4" id="adminStats">
+    <div class="col-6 col-md-3"><div class="stat-card"><div class="value" id="sTotalUsers">—</div><div class="label">Total Users</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-card"><div class="value" id="sActiveUsers">—</div><div class="label">Active Subscribers</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-card"><div class="value" id="sRevenue">£—</div><div class="label">Monthly Revenue</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-card"><div class="value" id="sPrizesPaid">£—</div><div class="label">Prizes Paid</div></div></div>
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs">
+    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tabUsers">👥 Users</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabCharities">💚 Charities</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabDraws">🎯 Draws</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabWinners">🏆 Winners</a></li>
+  </ul>
+
+  <div class="tab-content mt-3">
+
+    <!-- USERS -->
+    <div class="tab-pane fade show active" id="tabUsers">
+      <div class="card">
+        <h5 style="font-weight:700;margin-bottom:1rem;">All Users</h5>
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr><th>Name</th><th>Email</th><th>Plan</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+            <tbody id="usersTable"><tr><td colspan="6" style="color:var(--muted);">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHARITIES -->
+    <div class="tab-pane fade" id="tabCharities">
+      <div class="card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 style="font-weight:700;margin:0;">Charities</h5>
+          <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addCharityModal">+ Add Charity</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr><th>Name</th><th>Description</th><th>Website</th><th>Actions</th></tr></thead>
+            <tbody id="charitiesTable"><tr><td colspan="4" style="color:var(--muted);">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DRAWS -->
+    <div class="tab-pane fade" id="tabDraws">
+      <div class="card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 style="font-weight:700;margin:0;">Draws</h5>
+          <button class="btn btn-primary btn-sm" onclick="createDraw()">+ Create Draw</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr><th>Date</th><th>Numbers</th><th>Prize Pool</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="drawsTable"><tr><td colspan="5" style="color:var(--muted);">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- WINNERS -->
+    <div class="tab-pane fade" id="tabWinners">
+      <div class="card">
+        <h5 style="font-weight:700;margin-bottom:1rem;">Winner Verification</h5>
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr><th>User ID</th><th>Draw ID</th><th>Match</th><th>Prize</th><th>Proof</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="winnersTable"><tr><td colspan="7" style="color:var(--muted);">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Add Charity Modal -->
+<div class="modal fade" id="addCharityModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Charity</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="charityAlert"></div>
+        <form id="addCharityForm">
+          <div class="mb-3"><label class="form-label">Name</label><input type="text" class="form-control" id="cName" required></div>
+          <div class="mb-3"><label class="form-label">Description</label><textarea class="form-control" id="cDesc" rows="3" required></textarea></div>
+          <div class="mb-3"><label class="form-label">Website</label><input type="url" class="form-control" id="cWebsite"></div>
+          <div class="mb-3"><label class="form-label">Image URL</label><input type="url" class="form-control" id="cImage"></div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="addCharity()">Add Charity</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const token = localStorage.getItem('token');
+if (!token) window.location.href = '/login';
+const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+
+async function loadAdmin() {
+  const [statsRes, usersRes, charitiesRes, drawsRes, winnersRes] = await Promise.all([
+    fetch('/admin/stats', { headers }),
+    fetch('/admin/users', { headers }),
+    fetch('/admin/charities', { headers }),
+    fetch('/admin/draws', { headers }),
+    fetch('/admin/winners', { headers })
+  ]);
+
+  if (!statsRes.ok) { alert('Admin access required'); window.location.href = '/dashboard'; return; }
+
+  const stats = await statsRes.json();
+  document.getElementById('sTotalUsers').textContent = stats.total_users;
+  document.getElementById('sActiveUsers').textContent = stats.active_users;
+  document.getElementById('sRevenue').textContent = '£' + stats.monthly_revenue.toFixed(2);
+  document.getElementById('sPrizesPaid').textContent = '£' + stats.total_prizes_paid.toFixed(2);
+
+  const users = await usersRes.json();
+  document.getElementById('usersTable').innerHTML = users.map(u => `
+    <tr>
+      <td style="font-weight:600;">${u.full_name}</td>
+      <td style="color:var(--muted);">${u.email}</td>
+      <td style="text-transform:capitalize;">${u.subscription_type}</td>
+      <td><span class="status-badge status-${u.subscription_status}">${u.subscription_status}</span></td>
+      <td style="color:var(--muted);">${new Date(u.created_at).toLocaleDateString()}</td>
+      <td>
+        <select class="form-select form-select-sm" style="width:auto;display:inline-block;" onchange="updateSub(${u.id}, this.value)">
+          <option value="active" ${u.subscription_status==='active'?'selected':''}>Active</option>
+          <option value="inactive" ${u.subscription_status==='inactive'?'selected':''}>Inactive</option>
+          <option value="lapsed" ${u.subscription_status==='lapsed'?'selected':''}>Lapsed</option>
+        </select>
+      </td>
+    </tr>`).join('');
+
+  const charities = await charitiesRes.json();
+  document.getElementById('charitiesTable').innerHTML = charities.map(c => `
+    <tr>
+      <td style="font-weight:600;">${c.name}</td>
+      <td style="color:var(--muted);">${c.description}</td>
+      <td>${c.website ? `<a href="${c.website}" target="_blank" style="color:var(--primary);">Visit →</a>` : '—'}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteCharity(${c.id})">Delete</button></td>
+    </tr>`).join('');
+
+  const draws = await drawsRes.json();
+  document.getElementById('drawsTable').innerHTML = draws.map(d => `
+    <tr>
+      <td>${d.draw_date}</td>
+      <td>${d.numbers.map(n => `<span style="display:inline-block;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));text-align:center;line-height:28px;font-size:0.8rem;font-weight:700;margin:1px;">${n}</span>`).join('')}</td>
+      <td style="color:var(--primary);font-weight:700;">£${(d.prize_pool||0).toFixed(2)}</td>
+      <td><span class="status-badge status-${d.status==='published'?'active':'pending'}">${d.status}</span></td>
+      <td>${d.status==='pending' ? `<button class="btn btn-primary btn-sm" onclick="publishDraw(${d.id})">Publish & Run</button>` : '✓ Published'}</td>
+    </tr>`).join('');
+
+  const winners = await winnersRes.json();
+  document.getElementById('winnersTable').innerHTML = winners.length ? winners.map(w => `
+    <tr>
+      <td>#${w.user_id}</td>
+      <td>#${w.draw_id}</td>
+      <td><span class="match-badge match-${w.match_type}">${w.match_type}-Match</span></td>
+      <td style="color:var(--primary);font-weight:700;">£${w.prize_amount.toFixed(2)}</td>
+      <td>${w.proof_url ? `<a href="${w.proof_url}" target="_blank" style="color:var(--primary);">View Proof →</a>` : '<span style="color:var(--muted);">Not submitted</span>'}</td>
+      <td><span class="status-badge status-${w.status}">${w.status}</span></td>
+      <td class="d-flex gap-1">
+        ${w.status==='pending' ? `<button class="btn btn-primary btn-sm" onclick="verifyWinner(${w.id})">✓ Pay</button><button class="btn btn-danger btn-sm" onclick="rejectWinner(${w.id})">✕</button>` : '—'}
+      </td>
+    </tr>`).join('') : '<tr><td colspan="7" style="color:var(--muted);">No winners yet.</td></tr>';
+}
+
+async function updateSub(userId, status) {
+  await fetch(`/admin/users/${userId}/subscription?status=${status}`, { method: 'PUT', headers });
+}
+
+async function deleteCharity(id) {
+  if (!confirm('Delete this charity?')) return;
+  await fetch('/admin/charities/' + id, { method: 'DELETE', headers });
+  loadAdmin();
+}
+
+async function addCharity() {
+  const res = await fetch('/admin/charities', {
+    method: 'POST', headers,
+    body: JSON.stringify({ name: document.getElementById('cName').value, description: document.getElementById('cDesc').value, website: document.getElementById('cWebsite').value || null, image_url: document.getElementById('cImage').value || null })
+  });
+  if (res.ok) { bootstrap.Modal.getInstance(document.getElementById('addCharityModal')).hide(); loadAdmin(); }
+  else { const d = await res.json(); document.getElementById('charityAlert').innerHTML = `<div class="alert alert-danger">${d.detail}</div>`; }
+}
+
+async function createDraw() {
+  const date = prompt('Enter draw date (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+  if (!date) return;
+  const res = await fetch(`/api/draws?draw_date=${date}`, { method: 'POST', headers });
+  const data = await res.json();
+  alert(res.ok ? `✅ Draw created!\nNumbers: ${data.numbers.join(', ')}\nPrize Pool: £${data.prize_pool}` : '❌ ' + data.detail);
+  if (res.ok) loadAdmin();
+}
+
+async function publishDraw(id) {
+  if (!confirm('Publish this draw and calculate winners?')) return;
+  const res = await fetch(`/api/draws/${id}/publish`, { method: 'POST', headers });
+  const data = await res.json();
+  alert(res.ok ? `✅ ${data.message}\nPrize Pool: £${data.prize_pool}` : '❌ ' + data.detail);
+  if (res.ok) loadAdmin();
+}
+
+async function verifyWinner(id) {
+  await fetch(`/admin/winners/${id}/verify`, { method: 'PUT', headers });
+  loadAdmin();
+}
+
+async function rejectWinner(id) {
+  if (!confirm('Reject this winner?')) return;
+  await fetch(`/admin/winners/${id}/reject`, { method: 'PUT', headers });
+  loadAdmin();
+}
+
+loadAdmin();
+</script>
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}GolfGives — Play. Win. Give.{% endblock %}
+{% block content %}
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container position-relative" style="z-index:1;">
+    <div class="row align-items-center">
+      <div class="col-lg-6">
+        <div class="hero-badge">🏆 Monthly Prize Draws · Real Charity Impact</div>
+        <h1>Golf More.<br>Give More.<br><span>Win More.</span></h1>
+        <p>Subscribe, track your Stableford scores, enter monthly draws, and automatically support the charity you love — all in one place.</p>
+        <div class="d-flex gap-3 flex-wrap">
+          <a href="/signup" class="btn btn-primary btn-lg">Start Subscribing →</a>
+          <a href="#how-it-works" class="btn btn-outline-primary btn-lg">See How It Works</a>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat"><div class="num">£40%</div><div class="label">Jackpot Pool</div></div>
+          <div class="hero-stat"><div class="num">5</div><div class="label">Scores Tracked</div></div>
+          <div class="hero-stat"><div class="num">4+</div><div class="label">Charities</div></div>
+        </div>
+      </div>
+      <div class="col-lg-6 d-none d-lg-flex justify-content-center mt-5 mt-lg-0">
+        <div style="background:var(--card);border:1px solid rgba(0,200,150,0.2);border-radius:20px;padding:2rem;width:340px;">
+          <div style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">🎯 This Month's Draw</div>
+          <div class="d-flex gap-2 justify-content-center mb-3">
+            {% for n in [7, 14, 22, 31, 38] %}
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;">{{n}}</div>
+            {% endfor %}
+          </div>
+          <div style="background:rgba(0,200,150,0.08);border-radius:10px;padding:1rem;text-align:center;">
+            <div style="color:var(--muted);font-size:0.8rem;">Prize Pool</div>
+            <div style="font-size:2rem;font-weight:800;color:var(--primary);">£2,450</div>
+          </div>
+          <div style="margin-top:1rem;color:var(--muted);font-size:0.8rem;text-align:center;">Match 3-5 of your scores to win</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how-it-works" style="background:var(--dark2);">
+  <div class="container">
+    <div class="text-center">
+      <h2 class="section-title">How It Works</h2>
+      <p class="section-sub">Three simple steps to play, win, and give back</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4 text-center fade-in">
+        <div class="step-num">1</div>
+        <h4 style="font-weight:700;margin-bottom:0.5rem;">Subscribe</h4>
+        <p style="color:var(--muted);">Choose monthly or yearly plan. A portion of every subscription goes directly to your chosen charity and the prize pool.</p>
+      </div>
+      <div class="col-md-4 text-center fade-in">
+        <div class="step-num">2</div>
+        <h4 style="font-weight:700;margin-bottom:0.5rem;">Track Scores</h4>
+        <p style="color:var(--muted);">Enter your Stableford scores (1–45) after each round. We keep your latest 5 scores — these are your draw numbers.</p>
+      </div>
+      <div class="col-md-4 text-center fade-in">
+        <div class="step-num">3</div>
+        <h4 style="font-weight:700;margin-bottom:0.5rem;">Win & Give</h4>
+        <p style="color:var(--muted);">Every month we draw 5 numbers. Match 3, 4, or 5 to win prizes. Your subscription automatically supports your charity.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRIZE POOL -->
+<section class="section" id="prizes">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <h2 class="section-title">Prize Distribution</h2>
+        <p class="section-sub">Every draw, the prize pool is split across 3 match tiers</p>
+        <div class="mb-4">
+          <div class="d-flex justify-content-between mb-1">
+            <span style="font-weight:700;">🏆 5-Number Match (Jackpot)</span>
+            <span style="color:var(--primary);font-weight:700;">40%</span>
+          </div>
+          <div class="prize-bar prize-bar-bg bar-40"></div>
+          <small style="color:var(--muted);">Rolls over if no winner</small>
+        </div>
+        <div class="mb-4">
+          <div class="d-flex justify-content-between mb-1">
+            <span style="font-weight:700;">🥈 4-Number Match</span>
+            <span style="color:#a78bfa;font-weight:700;">35%</span>
+          </div>
+          <div class="prize-bar prize-bar-bg bar-35"></div>
+        </div>
+        <div class="mb-4">
+          <div class="d-flex justify-content-between mb-1">
+            <span style="font-weight:700;">🥉 3-Number Match</span>
+            <span style="color:var(--warning);font-weight:700;">25%</span>
+          </div>
+          <div class="prize-bar prize-bar-bg bar-25"></div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="row g-3">
+          <div class="col-6">
+            <div class="card text-center">
+              <div class="card-icon icon-green mx-auto">🎯</div>
+              <div style="font-size:1.8rem;font-weight:800;color:var(--primary);">£9.99</div>
+              <div style="color:var(--muted);font-size:0.9rem;">Monthly Plan</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="card text-center" style="border-color:rgba(0,200,150,0.3);">
+              <div class="card-icon icon-purple mx-auto">⭐</div>
+              <div style="font-size:1.8rem;font-weight:800;color:var(--accent);">£99.99</div>
+              <div style="color:var(--muted);font-size:0.9rem;">Yearly Plan <span style="color:var(--primary);font-size:0.75rem;">Save 17%</span></div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="card" style="background:linear-gradient(135deg,rgba(0,200,150,0.1),rgba(124,58,237,0.1));border-color:rgba(0,200,150,0.2);">
+              <p style="color:var(--muted);margin-bottom:0.5rem;font-size:0.9rem;">40% of all subscriptions</p>
+              <p style="font-weight:700;margin:0;">Goes directly to the monthly prize pool 🏆</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CHARITIES -->
+<section class="section" id="charities" style="background:var(--dark2);">
+  <div class="container">
+    <div class="text-center">
+      <h2 class="section-title">Charities We Support</h2>
+      <p class="section-sub">Choose your cause — your subscription contributes automatically</p>
+    </div>
+    <div class="row g-4" id="homeCharities">
+      <div class="col-12 text-center" style="color:var(--muted);">Loading charities...</div>
+    </div>
+    <div class="text-center mt-4">
+      <a href="/signup" class="btn btn-primary btn-lg">Choose Your Charity →</a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section text-center">
+  <div class="container">
+    <div style="background:linear-gradient(135deg,rgba(0,200,150,0.1),rgba(124,58,237,0.1));border:1px solid rgba(0,200,150,0.2);border-radius:24px;padding:4rem 2rem;">
+      <h2 style="font-size:2.5rem;font-weight:900;margin-bottom:1rem;">Ready to Play & Give?</h2>
+      <p style="color:var(--muted);font-size:1.1rem;max-width:500px;margin:0 auto 2rem;">Join hundreds of golfers making a difference with every round they play.</p>
+      <a href="/signup" class="btn btn-primary btn-lg px-5">Subscribe Now — From £9.99/mo</a>
+    </div>
+  </div>
+</section>
+
+<script>
+fetch('/api/charities').then(r => r.json()).then(data => {
+  const el = document.getElementById('homeCharities');
+  if (!data.length) { el.innerHTML = '<div class="col-12 text-center" style="color:var(--muted);">No charities listed yet.</div>'; return; }
+  el.innerHTML = data.map(c => `
+    <div class="col-md-3 col-sm-6">
+      <div class="card text-center h-100">
+        <div style="font-size:2.5rem;margin-bottom:0.8rem;">💚</div>
+        <h5 style="font-weight:700;">${c.name}</h5>
+        <p style="color:var(--muted);font-size:0.9rem;">${c.description}</p>
+        ${c.website ? `<a href="${c.website}" target="_blank" style="color:var(--primary);font-size:0.85rem;">Visit →</a>` : ''}
+      </div>
+    </div>`).join('');
+}).catch(() => {});
+</script>
+{% endblock %}

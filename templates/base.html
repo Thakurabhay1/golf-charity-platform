@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}GolfGives — Play. Win. Give.{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/static/style.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg">
+    <div class="container">
+      <a class="navbar-brand" href="/">⛳ GolfGives</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navMenu">
+        <div class="navbar-nav ms-auto align-items-center gap-2" id="navLinks">
+          <a class="nav-link" href="/#how-it-works">How It Works</a>
+          <a class="nav-link" href="/#charities">Charities</a>
+          <a class="nav-link" href="/#prizes">Prizes</a>
+          <a class="nav-link" href="/login" id="navLogin">Login</a>
+          <a class="nav-link nav-btn" href="/signup" id="navSignup">Subscribe Now</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>⛳ <strong>GolfGives</strong> — Play golf. Win prizes. Change lives.</p>
+      <p class="mt-1" style="font-size:0.8rem;">© 2024 GolfGives. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/app.js"></script>
+  <script>
+    // Show dashboard/logout if logged in
+    const token = localStorage.getItem('token');
+    if (token) {
+      const navLinks = document.getElementById('navLinks');
+      if (navLinks) {
+        document.getElementById('navLogin')?.remove();
+        document.getElementById('navSignup')?.remove();
+        navLinks.innerHTML += `<a class="nav-link" href="/dashboard">Dashboard</a>`;
+        navLinks.innerHTML += `<a class="nav-link nav-btn" href="#" onclick="logout()">Logout</a>`;
+      }
+    }
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = '/';
+    }
+  </script>
+</body>
+</html>
