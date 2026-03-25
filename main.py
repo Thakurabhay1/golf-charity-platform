@@ -2,7 +2,8 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, HTMLResponse
+from jinja2 import Environment, FileSystemLoader
 from routers import auth_router, scores_router, charities_router, draws_router, admin_router
 
 app = FastAPI(title="GolfGives", description="Golf Charity Subscription Platform")
@@ -16,7 +17,12 @@ app.add_middleware(
 )
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+
+jinja_env = Environment(loader=FileSystemLoader("templates"))
+
+def render(name: str, context: dict = {}):
+    template = jinja_env.get_template(name)
+    return HTMLResponse(template.render(**context))
 
 app.include_router(auth_router.router, prefix="/auth", tags=["auth"])
 app.include_router(scores_router.router, prefix="/api", tags=["scores"])
@@ -26,23 +32,23 @@ app.include_router(admin_router.router, prefix="/admin", tags=["admin"])
 
 @app.get("/")
 async def home(request: Request):
-    return templates.TemplateResponse(request, "index.html")
+    return render("index.html")
 
 @app.get("/login")
 async def login_page(request: Request):
-    return templates.TemplateResponse(request, "login.html")
+    return render("login.html")
 
 @app.get("/signup")
 async def signup_page(request: Request):
-    return templates.TemplateResponse(request, "signup.html")
+    return render("signup.html")
 
 @app.get("/dashboard")
 async def dashboard(request: Request):
-    return templates.TemplateResponse(request, "dashboard.html")
+    return render("dashboard.html")
 
 @app.get("/admin")
 async def admin_page(request: Request):
-    return templates.TemplateResponse(request, "admin.html")
+    return render("admin.html")
 
 @app.get("/logout")
 async def logout():
